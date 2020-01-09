@@ -18,20 +18,35 @@ namespace LibraryApi.Controllers
         }
 
         [HttpPost("/books")]
-        public async Task<IActionResult> AddABook()
+        public async Task<IActionResult> AddABook([FromBody] PostBookRequest bookToAdd)
         {
-            // Validate the thingy
-            // Not? -> Return a 400 status (Bad Request)
-            // Is Valid?
-            //   Add it to the database
-            //   Return a 201 (Created) status code.
-            //   Add a location header to the response that has the URL for the new baby resource.
-            //   And, if you are nice, send them a copy of the new resource as well.
-            return BadRequest();
+            if(!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var book = new Book
+            {
+                Title = bookToAdd.Title,
+                Author = bookToAdd.Author,
+                Genre = bookToAdd.Genre ?? "Unknown"
+            };
+            Context.Books.Add(book); // why the error?
+            await Context.SaveChangesAsync();
+
+
+            var bookToReturn = new GetBookResponseDocument
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                Genre = book.Genre
+            };
+            return CreatedAtRoute("books#getabook", new { id = book.Id }, bookToReturn);
         }
 
         // GET /books/{id}
-        [HttpGet("/books/{id:int}")]
+        [HttpGet("/books/{id:int}", Name ="books#getabook")]
         public async Task<IActionResult> GetABook(int id)
         {
             var result = await Context.Books
