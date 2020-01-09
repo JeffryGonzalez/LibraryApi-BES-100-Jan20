@@ -17,6 +17,19 @@ namespace LibraryApi.Controllers
             Context = context;
         }
 
+        [HttpDelete("/books/{id:int}")]
+        public async Task<IActionResult> RemoveABook(int id)
+        {
+            var book = await Context.Books.Where(b => b.Id == id && b.InInventory).SingleOrDefaultAsync();
+            if(book != null)
+            {
+                book.InInventory = false;
+                await Context.SaveChangesAsync();
+            }
+            return NoContent();
+        }
+
+
         [HttpPost("/books")]
         public async Task<IActionResult> AddABook([FromBody] PostBookRequest bookToAdd)
         {
@@ -50,6 +63,7 @@ namespace LibraryApi.Controllers
         public async Task<IActionResult> GetABook(int id)
         {
             var result = await Context.Books
+                .Where(b=> b.InInventory == true)
                 .Select(b => new GetBookResponseDocument
                 {
                     Id = b.Id,
@@ -72,7 +86,9 @@ namespace LibraryApi.Controllers
         public async Task<IActionResult> GetAllBooks([FromQuery] string genre ="all")
         {
             var response = new GetBooksResponseCollection();
-            var allBooks = Context.Books.Select(b => new BookSummaryItem
+            var allBooks = Context.Books
+                .Where(b => b.InInventory == true)
+                .Select(b => new BookSummaryItem
             {
                 Id = b.Id,
                 Title = b.Title,

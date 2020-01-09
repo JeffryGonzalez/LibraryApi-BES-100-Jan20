@@ -12,5 +12,7 @@ namespace LibraryApi.Domain
         public string Author { get; set; }
         public string Genre { get; set; }
 
+        public bool InInventory { get; set; } = true;
+
     }
 }
